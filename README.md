@@ -1,5 +1,8 @@
-#Snake AI
-Snake AI that is able to beat the game
+#Artificial Intelligence Project Compilation
+## Projects:
+* Snake AI
+* PacMan AI
+* Pong AI
 
 #Members
-Nuno Antunes
+* Nuno Antunes

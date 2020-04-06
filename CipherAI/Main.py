@@ -47,7 +47,7 @@ def chi_squared_value(frequencies):
         sum += (((total_characters * probabilities[i]) - frequencies[i]) ** 2) / frequencies[i]
     return sum
 
-def compare_frequencies_probabilities(frequencies):
+def map_frequencies_probabilities(frequencies):
     frequencies_letters = sorted(list(zip(frequencies, alphabet)))
     frequencies_letters.reverse()
 
@@ -83,6 +83,7 @@ def decode_with_map(input, output, map):
     input.seek(0)
     output.seek(0)
 
+
 #MAIN
 book = open("data/book.txt", "r")
 encoded_book_write = open("data/encoded_book.txt", "w")
@@ -92,8 +93,8 @@ encodeFile(book, encoded_book_write, 5)
 encoded_book_read = open("data/encoded_book.txt", "r")
 
 frequencies = countCharacters(encoded_book_read)
-zipped = compare_frequencies_probabilities(frequencies)
+zipped = map_frequencies_probabilities(frequencies)
 
-test = open("test.txt", "w")
+test = open("data/test.txt", "w")
 print(zipped)
 decode_with_map(encoded_book_read, test, zipped)

@@ -2,11 +2,17 @@ import numpy as np
 import random
 import time
 import copy
+import string
 
-probabilities = [8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.2, 0.8,  4.0, 2.4, 6.7, 7.5, 1.9, 0.1, 6.0, 6.3, 9.1, 2.8, 1.0, 2.4, 0.2, 2.0, 0.1]
+probabilities = [8.2, 1.5, 2.8, 4.3, 12.7, 2.2, 2.0, 6.1, 7.0, 0.2, 0.8, 4.0, 2.4, 6.7, 7.5, 1.9, 0.1, 6.0, 6.3, 9.1,
+                 2.8, 1.0, 2.4, 0.2, 2.0, 0.1]
 probabilities = np.divide(probabilities, 100)
 alphabet = "abcdefghijklmnopqrstuvwxyz"
 alphabet_capital = alphabet.upper()
+
+most_used_words = ["the", "of", "and", "to", "a", "in", "is", "i", "that", "it", "for", "you", "was", "with", "on",
+                   "as", "have", "but", "be", "they"]
+
 
 def encodeFile(input, output, shift):
     while True:
@@ -29,8 +35,9 @@ def encodeLine(line, shift):
             encoded_line += alphabet[(alphabet.find(char) + shift) % len(alphabet)]
     return encoded_line
 
+
 def countCharacters(file):
-    characters = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    characters = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     while True:
         line = file.readline()
         for char in line.lower():
@@ -41,12 +48,14 @@ def countCharacters(file):
     file.seek(0)
     return characters
 
+
 def chi_squared_value(frequencies):
     total_characters = np.sum(frequencies)
     sum = 0
     for i in range(26):
         sum += (((total_characters * probabilities[i]) - frequencies[i]) ** 2) / frequencies[i]
     return sum
+
 
 def map_frequencies_probabilities(frequencies):
     frequencies_letters = sorted(list(zip(frequencies, alphabet)))
@@ -60,6 +69,7 @@ def map_frequencies_probabilities(frequencies):
         characters_map.append((frequencies_letters[i][1], probabilities_zip[i][1]))
     return characters_map
 
+
 def map_alphabets(new_alphabet):
     probabilities_zip = sorted(list(zip(probabilities, alphabet)))
     probabilities_zip.reverse()
@@ -67,6 +77,7 @@ def map_alphabets(new_alphabet):
     probabilities_alphabet = probabilities_zip[:, 1]
 
     return np.array(list(zip(new_alphabet, probabilities_alphabet)))
+
 
 def decode_line_with_map(line, map):
     used, newchar = zip(*map)
@@ -82,6 +93,7 @@ def decode_line_with_map(line, map):
             decoded_line += char
     return decoded_line
 
+
 def decode_with_map(input, output, map):
     while True:
         line = input.readline()
@@ -92,11 +104,13 @@ def decode_with_map(input, output, map):
     input.seek(0)
     output.seek(0)
 
+
 def mutate_map(map_alphabet):
     point1 = random.randint(0, len(map_alphabet) - 1)
     point2 = random.randint(0, len(map_alphabet) - 1)
 
     return swap(map_alphabet, point1, point2)
+
 
 def swap(map_alphabet, i, j):
     result = copy.deepcopy(map_alphabet)
@@ -107,12 +121,14 @@ def swap(map_alphabet, i, j):
 
     return result
 
+
 def create_starting_population(individuals, map_alphabet):
     population = []
     population.append(map_alphabet)
     for i in range(individuals - 1):
         population.append(mutate_map(map_alphabet))
     return np.array(population)
+
 
 def get_scores(input, population):
     output = open("data/output_ga.txt", "w")
@@ -124,10 +140,49 @@ def get_scores(input, population):
     return np.array(scores)
 
 
+def count_common_word(file):
+    frequencies = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    while True:
+        line = file.readline()
+        words = line.split(" ")
+        for word in words:
+            w = word.lower()
+            w = w.rstrip()
+            w = w.translate(str.maketrans('', '', string.punctuation))
+            if len(w) == 0:
+                continue
+            for i in range(len(most_used_words)):
+                if w == "its":
+                    frequencies[most_used_words.index("it")] += 1
+                    frequencies[most_used_words.index("is")] += 1
+                elif w == "im":
+                    frequencies[most_used_words.index("i")] += 1
+                elif w == most_used_words[i]:
+                    frequencies[i] += 1
+
+        if len(line) == 0:
+            break
+    file.seek(0)
+    return frequencies
+
+
 def calculate_fitness(file):
-    #TODO: Work on the fitness function, needs to reflect how close it is to english
-    frequencies = countCharacters(file)
-    return chi_squared_value(frequencies)
+    # TODO: Use expected number of each word
+    frequencies = count_common_word(file)
+    mapped = sorted(list(zip(frequencies, most_used_words)))
+    mapped.reverse()
+    mapped = np.array(mapped)
+    mapped = mapped[:, 1]
+
+    score = []
+    for i in range(len(most_used_words)):
+        if most_used_words[i] == mapped[i]:
+            score.append(1)
+        else:
+            score.append(0)
+
+    return np.count_nonzero(score)
+
 
 def select_individual_by_tournament(population, scores):
     population_size = len(scores)
@@ -138,12 +193,13 @@ def select_individual_by_tournament(population, scores):
     fighter_1_score = scores[fighter_1]
     fighter_2_score = scores[fighter_2]
 
-    if fighter_1_score <= fighter_2_score:
+    if fighter_1_score >= fighter_2_score:
         winner = fighter_1
     else:
         winner = fighter_2
 
     return population[winner, :]
+
 
 def crossover_alphabets(alphabet_1, alphabet_2, crossover_point):
     new_alphabet_1 = []
@@ -172,12 +228,14 @@ def crossover_alphabets(alphabet_1, alphabet_2, crossover_point):
 
     return new_alphabet_1, new_alphabet_2
 
+
 def random_mutation_gene(population, probability):
     for individual in range(len(population)):
         if random.choices(population=[True, False], weights=[probability, 1 - probability], k=1)[0]:
             population[individual] = mutate_map(population[individual])
 
     return population
+
 
 def breed_crossover(parent_1, parent_2):
     chromossome_length = len(parent_1)
@@ -192,12 +250,9 @@ def breed_crossover(parent_1, parent_2):
     return map_alphabets(new_alphabet_1), map_alphabets(new_alphabet_2)
 
 
-
-
-#MAIN
+# MAIN
 book = open("data/book.txt", "r")
 encoded_book_write = open("data/encoded_book.txt", "w")
-
 
 encodeFile(book, encoded_book_write, 5)
 
@@ -213,8 +268,9 @@ map_alphabet = map_frequencies_probabilities(frequencies)
 population = create_starting_population(population_size, map_alphabet)
 
 scores = get_scores(encoded_book_read, population)
-best_score = np.min(scores)
+best_score = np.max(scores)
 best_score_progress = [best_score]
+best_population = []
 
 for generation in range(generations):
     new_population = []
@@ -231,5 +287,17 @@ for generation in range(generations):
     population = random_mutation_gene(population, mutation_rate)
 
     scores = get_scores(encoded_book_read, population)
-    best_score = min(best_score, np.min(scores))
-    best_score_progress.append(best_score)
+    best_score_population = np.max(scores)
+    if best_score < best_score_population:
+        best_score = best_score_population
+        best_population = population[np.argmax(scores)]
+        best_score_progress.append(best_score)
+
+print(best_population)
+print(scores)
+print(best_score)
+print(best_score_progress)
+
+solution = open("data/solution.txt", "w")
+
+decode_with_map(encoded_book_read, solution, best_population)

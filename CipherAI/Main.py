@@ -168,20 +168,34 @@ def count_common_word(file):
 
 def calculate_fitness(file):
     # TODO: Use expected number of each word
+    # frequencies = countCharacters(file)
+    # chi_squared = chi_squared_value(frequencies)
+    # total_characters = np.sum(frequencies)
+
     frequencies = count_common_word(file)
     mapped = sorted(list(zip(frequencies, most_used_words)))
     mapped.reverse()
     mapped = np.array(mapped)
     mapped = mapped[:, 1]
 
+    # expected = []
+    # for i in range(len(frequencies)):
+    #     expected.append(frequencies[0]/(i+1))
+    #
+    # print(expected)
+    # print(frequencies)
     score = []
     for i in range(len(most_used_words)):
-        if most_used_words[i] == mapped[i]:
+        if frequencies[i] == 0:
+            score.append(-100)
+        elif most_used_words[i] == mapped[i]:
             score.append(1)
         else:
             score.append(0)
 
-    return np.count_nonzero(score)
+    # print(chi_squared, total_characters)
+
+    return np.sum(score)
 
 
 def select_individual_by_tournament(population, scores):
@@ -249,18 +263,30 @@ def breed_crossover(parent_1, parent_2):
 
     return map_alphabets(new_alphabet_1), map_alphabets(new_alphabet_2)
 
+def save_progress(file, population, number_of_generations, mutation_rate, current_generation):
+    file.write(str(number_of_generations) + "\n")
+    file.write(str(current_generation) + "\n")
+    file.write(str(len(population)) + "\n")
+    file.write(str(mutation_rate) + "\n")
+    file.write(str(population) + "\n")
+    file.seek(0)
+
+
 
 # MAIN
 book = open("data/book.txt", "r")
-encoded_book_write = open("data/encoded_book.txt", "w")
+progress = open("data/progress", "w")
+# encoded_book_write = open("data/encoded_book.txt", "w")
 
-encodeFile(book, encoded_book_write, 5)
+print(calculate_fitness(book))
+
+# encodeFile(book, encoded_book_write, 5)
 
 encoded_book_read = open("data/encoded_book.txt", "r")
 
-generations = 10
-population_size = 50
-mutation_rate = 0.05
+generations = 200
+population_size = 500
+mutation_rate = 0.10
 
 frequencies = countCharacters(encoded_book_read)
 map_alphabet = map_frequencies_probabilities(frequencies)
@@ -270,9 +296,10 @@ population = create_starting_population(population_size, map_alphabet)
 scores = get_scores(encoded_book_read, population)
 best_score = np.max(scores)
 best_score_progress = [best_score]
-best_population = []
+best_population = population[np.argmax(scores)]
 
 for generation in range(generations):
+    print(generation)
     new_population = []
 
     for i in range(int(population_size / 2)):
@@ -292,6 +319,7 @@ for generation in range(generations):
         best_score = best_score_population
         best_population = population[np.argmax(scores)]
         best_score_progress.append(best_score)
+    save_progress(progress, population, generations, mutation_rate, generation)
 
 print(best_population)
 print(scores)
@@ -301,3 +329,7 @@ print(best_score_progress)
 solution = open("data/solution.txt", "w")
 
 decode_with_map(encoded_book_read, solution, best_population)
+
+solution_read = open("data/solution.txt", "r")
+
+print(count_common_word(solution_read))

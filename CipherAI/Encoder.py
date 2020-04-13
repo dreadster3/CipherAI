@@ -7,7 +7,7 @@ class Encoder:
         self.alphabet_map = alphabet_map
 
     #Method to encode a single string.
-    #@para line string to be encoded.
+    #@param line string to be encoded.
     #return the encoded string
     def encode_line(self, line):
         used_alphabet, new_alphabet = zip(*self.alphabet_map)

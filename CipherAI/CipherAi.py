@@ -1,6 +1,5 @@
 from FileParser import FileParser
 from GeneticAlgorithm import GeneticAlgorithm
-import time
 
 if __name__ == "__main__":
     alphabet = "abcdefghijklmnopqrstuvwxyz"

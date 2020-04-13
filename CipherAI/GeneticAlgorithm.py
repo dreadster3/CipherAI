@@ -6,6 +6,10 @@ from FileParser import FileParser
 
 
 class GeneticAlgorithm:
+    #Constructor
+    #@param population_size of the genetic algorithm
+    #@param number_of_generations of the genetic algorithm
+    #@param mutation_rate probability of mutation for genetic algorithm
     def __init__(self, population_size, generations, mutation_rate):
         self.population_size = population_size
         self.generations = generations
@@ -13,6 +17,9 @@ class GeneticAlgorithm:
         self.most_used_words = ["the", "be", "to", "of", "and", "a", "in", "is", "that", "have", "i", "it", "for", "not", "on", "with", "he", "as", "you", "do", "is",
                                 "at", "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "up", "get", "which", "make", "just", "next", "quite"]
 
+    #Method to create the starting population
+    #@param map_alphabet starting alphabet map to be mutated
+    #return array containing the full starting population
     def create_starting_population(self, map_alphabet):
         population = []
         population.append(map_alphabet)
@@ -20,12 +27,20 @@ class GeneticAlgorithm:
             population.append(self.mutate_map(map_alphabet))
         return np.array(population)
 
+    #Method that mutates a map by swaping 2 letters at random
+    #@param map_alphabet to be mutated
+    #return mutated map
     def mutate_map(self, map_alphabet):
         point1 = random.randint(0, len(map_alphabet) - 1)
         point2 = random.randint(0, len(map_alphabet) - 1)
 
         return self.swap(map_alphabet, point1, point2)
 
+    #Auxiliar method to swap 2 letters in an alphabet_map
+    #@param map_alphabet that needs to be altered
+    #@param i index of element 1
+    #@param j index of element 2
+    #return alphabet_map after the swap
     def swap(self, map_alphabet, i, j):
         result = copy.deepcopy(map_alphabet)
 
@@ -35,6 +50,9 @@ class GeneticAlgorithm:
 
         return result
 
+    #Method to mutate the population
+    #@param population to be mutated
+    #return population after mutation
     def random_mutation_gene(self, population):
         for individual in range(len(population)):
             for i in range(26):
@@ -43,6 +61,11 @@ class GeneticAlgorithm:
 
         return population
 
+    #Calculate the scores for the current population
+    #@param words to be used for calculation
+    #@param frequencies_words frequency of each word
+    #@param population to be analyzed
+    #return array with containing the score for each element of the population
     def get_scores(self, words, frequencies_words, population):
         scores = []
         for individual in population:
@@ -51,6 +74,10 @@ class GeneticAlgorithm:
             scores.append(self.calculate_fitness(encoded_words, frequencies_words))
         return np.array(scores)
 
+    #Method to select two elements at random and then pick the best one
+    #@param population to pick the elements from
+    #@param array containing the socres of each element
+    #return the map of the element that is the best
     def select_individual_by_tournament(self, population, scores):
         population_size = len(scores)
 
@@ -67,6 +94,11 @@ class GeneticAlgorithm:
 
         return population[winner, :]
 
+    #Method the crossover 2 alphabets in order to create a child alphabet
+    #@param alphabet_1
+    #@param alphabet_2
+    #@param crossover_point point at which the two alphabets start using the letters of the other alphabet
+    #return 2 alphabets that are similar to both alphabets
     def crossover_alphabets(self, alphabet_1, alphabet_2, crossover_point):
         new_alphabet_1 = []
         new_alphabet_2 = []
@@ -94,6 +126,9 @@ class GeneticAlgorithm:
 
         return new_alphabet_1, new_alphabet_2
 
+    #Method to create two children alphabets out of 2 parent alphabets
+    #@param parent_1 to be used to create the children
+    #@param parent_2 to be used to create the children
     def breed_crossover(self, parent_1, parent_2):
         parser = FileParser("")
         chromossome_length = len(parent_1)
@@ -107,9 +142,10 @@ class GeneticAlgorithm:
 
         return parser.map_alphabets(new_alphabet_1), parser.map_alphabets(new_alphabet_2)
 
+    #Calculate the fitness for a given encoding
+    #@param words encoded words to be assessed
+    #@param frequencies_words how many times each word appears
     def calculate_fitness(self, words, frequencies_words):
-        # TODO: Use expected number of each word
-
         frequencies = self.count_common_word(words, frequencies_words)
         mapped = sorted(list(zip(frequencies, self.most_used_words)))
         mapped.reverse()
@@ -127,6 +163,10 @@ class GeneticAlgorithm:
 
         return np.sum(score)
 
+    #Method to count occurences of the most common words of the english alphabet
+    #@param words words to be checked
+    #@param frequencies_words how many times each words appears
+    #return array containing how many times each most common word appears
     def count_common_word(self, words, frequencies_words):
         frequencies = np.zeros(len(self.most_used_words), dtype=int)
         for word in words:
@@ -140,11 +180,19 @@ class GeneticAlgorithm:
                     frequencies[i] += (1 * frequencies_words[words.index(word)])
         return frequencies
 
+    #Save the progress of the genetic algorithm onto a file
+    #@param path of file to save the progress
+    #@param current_generation being iterated in the genetic algorithm
+    #@param best_score achieved so far
+    #@param best_population population that generated the best_score
     def save_progress(self, path, generation, best_score, best_population):
         parser = FileParser(path)
         parser.save_progress(self.population_size, self.generations, self.mutation_rate, generation, best_score,
                              best_population)
 
+    #Main method of the genetic algorithm
+    #@param parser of the file that needs to be decoded
+    #return the best_score and the alphabet that achieved the best score
     def run(self, parser):
         number_of_lines = 10000
         words, frequencies_words = parser.get_first_n_words(number_of_lines)

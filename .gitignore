@@ -1,3 +1,5 @@
 
 CipherAI/venv/*
 CipherAI/.idea/*
+.idea/*
+CipherAI/__pycache__/*

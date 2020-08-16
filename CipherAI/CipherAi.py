@@ -1,11 +1,11 @@
-from FileParser import FileParser
-from GeneticAlgorithm import GeneticAlgorithm
+from CipherAI.FileParser import FileParser
+from CipherAI.GeneticAlgorithm import GeneticAlgorithm
 
 if __name__ == "__main__":
     alphabet = "abcdefghijklmnopqrstuvwxyz"
     new_alphabet = "qwertyuiopasdfghjklzxcvbnm"
     encode = FileParser("data/book.txt")
-    encode.encodefile("data/encoded_book.txt", list(zip(alphabet, new_alphabet)))
+    encode.encode_file("data/encoded_book.txt", list(zip(alphabet, new_alphabet)))
 
     solution = FileParser("data/encoded_book.txt")
 
@@ -13,4 +13,4 @@ if __name__ == "__main__":
 
     best_score, best_population = ga.run(solution)
 
-    solution.encodefile("data/solution_new.txt", best_population)
+    solution.encode_file("data/solution_new.txt", best_population)

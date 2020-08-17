@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
     solution = FileParser("data/encoded_book.txt")
 
-    ga = GeneticAlgorithm(500, 200, 0.01)
+    ga = GeneticAlgorithm(200, 100, 0.01)
 
     best_score, best_population = ga.run(solution)
 

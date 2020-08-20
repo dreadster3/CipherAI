@@ -4,6 +4,8 @@ import numpy as np
 from CipherAI.Encoder import Encoder
 from CipherAI.FileParser import FileParser
 
+import time
+
 
 # Auxiliary method to swap 2 letters in an alphabet_map
 # @param map_alphabet that needs to be altered
@@ -202,26 +204,29 @@ class GeneticAlgorithm:
     # return the best_score and the alphabet that achieved the best score
     def run(self, parser):
         number_of_lines = 10000
+
         words, frequencies_words = parser.get_first_n_words(number_of_lines)
-        print(words)
-        print(frequencies_words)
         frequencies_characters = parser.count_characters(words, frequencies_words)
+
         map_alphabet = parser.map_frequencies_probabilities(frequencies_characters)
 
         population = self.create_starting_population(map_alphabet)
 
         scores = self.get_scores(words, frequencies_words, population)
+
         best_score = np.max(scores)
         best_score_progress = [best_score]
         best_population = population[np.argmax(scores)]
 
         for generation in range(self.generations):
-            print(generation)
+            percentage = (generation + 1)/self.generations
+            print("\r", "[" + "#" * int(20 * percentage) + "*" * int(20 - (20 * percentage)) + "]", int(percentage * 100), "%", end="")
             new_population = []
 
             for i in range(int(self.population_size / 2)):
                 parent_1 = select_individual_by_tournament(population, scores)
                 parent_2 = select_individual_by_tournament(population, scores)
+
                 child_1, child_2 = breed_crossover(parent_1, parent_2)
 
                 new_population.append(child_1)
@@ -236,6 +241,6 @@ class GeneticAlgorithm:
                 best_score = best_score_population
                 best_population = population[np.argmax(scores)]
                 best_score_progress.append(best_score)
-            self.save_progress("data/progress.txt", generation, best_score, best_population)
-        print(best_score_progress)
+            #self.save_progress("data/progress.txt", generation, best_score, best_population)
+        print("\n", best_score_progress)
         return best_score, best_population

@@ -4,3 +4,5 @@ CipherAI/.idea/*
 .idea/*
 CipherAI/__pycache__/*
 CipherAI/data/encoded_book.txt
+CipherAI/data/progress.txt
+CipherAI/data/solution_new.txt
